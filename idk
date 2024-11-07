@@ -1,0 +1,111 @@
+# Simple game using pygame
+import pygame
+import random
+import os
+
+# Initialize pygame
+pygame.init()
+
+# Game Settings
+WIDTH, HEIGHT = 800, 600
+FPS = 60
+PLAYER_SPEED = 5
+OBSTACLE_SPEED = 5
+
+# Colors
+WHITE = (255, 255, 255)
+BLACK = (0, 0, 0)
+RED = (255, 0, 0)
+
+# Setup the screen
+screen = pygame.display.set_mode((WIDTH, HEIGHT))
+pygame.display.set_caption("Simple Game")
+
+# Player Class
+class Player(pygame.sprite.Sprite):
+    def __init__(self):
+        super().__init__()
+        self.image = pygame.Surface((50, 50))
+        self.image.fill(WHITE)
+        self.rect = self.image.get_rect()
+        self.rect.center = (WIDTH // 2, HEIGHT - 50)
+
+    def update(self, keys):
+        if keys[pygame.K_LEFT] and self.rect.left > 0:
+            self.rect.x -= PLAYER_SPEED
+        if keys[pygame.K_RIGHT] and self.rect.right < WIDTH:
+            self.rect.x += PLAYER_SPEED
+        if keys[pygame.K_UP] and self.rect.top > 0:
+            self.rect.y -= PLAYER_SPEED
+        if keys[pygame.K_DOWN] and self.rect.bottom < HEIGHT:
+            self.rect.y += PLAYER_SPEED
+
+# Obstacle Class
+class Obstacle(pygame.sprite.Sprite):
+    def __init__(self):
+        super().__init__()
+        self.image = pygame.Surface((50, 50))
+        self.image.fill(RED)
+        self.rect = self.image.get_rect()
+        self.rect.x = random.randint(0, WIDTH - 50)
+        self.rect.y = -50
+
+    def update(self):
+        self.rect.y += OBSTACLE_SPEED
+        if self.rect.top > HEIGHT:
+            self.rect.y = -50
+            self.rect.x = random.randint(0, WIDTH - 50)
+
+# Create sprites
+player = Player()
+player_group = pygame.sprite.Group(player)
+
+obstacle_group = pygame.sprite.Group()
+for i in range(5):
+    obstacle = Obstacle()
+    obstacle_group.add(obstacle)
+
+# Game loop
+def game_loop():
+    clock = pygame.time.Clock()
+    running = True
+    score = 0
+
+    while running:
+        screen.fill(BLACK)
+        clock.tick(FPS)
+
+        # Check events
+        for event in pygame.event.get():
+            if event.type == pygame.QUIT:
+                running = False
+
+        # Get keys
+        keys = pygame.key.get_pressed()
+
+        # Update game objects
+        player_group.update(keys)
+        obstacle_group.update()
+
+        # Check collisions
+        if pygame.sprite.spritecollide(player, obstacle_group, False):
+            running = False
+
+        # Draw everything
+        player_group.draw(screen)
+        obstacle_group.draw(screen)
+
+        # Display score
+        font = pygame.font.SysFont('Arial', 24)
+        score_text = font.render(f"Score: {score}", True, WHITE)
+        screen.blit(score_text, (10, 10))
+
+        pygame.display.flip()
+
+        score += 1
+
+    pygame.quit()
+
+# Run the game loop
+if __name__ == "__main__":
+    game_loop()
